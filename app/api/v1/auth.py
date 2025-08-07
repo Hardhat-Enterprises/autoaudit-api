@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.services.auth_service import azure_ad_service
-from app.models.auth import TokenResponse, TokenRequest, UserInfo
+from app.models.auth_model import TokenResponse, TokenRequest, UserInfo
 from app.utils.logger import logger
 
 router = APIRouter()
