@@ -111,27 +111,6 @@ This project uses the [Microsoft Graph Sandbox Mocks](https://github.com/pnp/pro
 
 The sandbox provides mock responses for common Microsoft Graph endpoints, allowing you to develop and test your compliance assessment features without requiring a full Microsoft 365 environment.
 
-## 🚀 Development
-
-### Running Tests
-
-```bash
-uv run pytest
-```
-
-### Code Formatting
-
-```bash
-uv run black .
-uv run isort .
-```
-
-### Type Checking
-
-```bash
-uv run mypy app/
-```
-
 ## 🤝 Contributing
 
 1. Fork the repository
