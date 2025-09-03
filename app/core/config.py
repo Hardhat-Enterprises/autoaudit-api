@@ -36,13 +36,46 @@ class Settings(BaseSettings):
         default="https://graph.microsoft.com/v1.0",
         description="Base URL for Microsoft Graph API",
     )
+    # Redis Configuration
+    REDIS_URL: Optional[str] = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL",
+    )
+    REDIS_HOST: Optional[str] = Field(
+        default="localhost",
+        description="Redis host",
+    )
+    REDIS_PORT: Optional[int] = Field(
+        default=6379,
+        description="Redis port",
+    )
+    REDIS_DB: Optional[int] = Field(
+        default=0,
+        description="Redis database index",
+    )
+    REDIS_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Redis password",
+    )
+
+    # Cache Settings
+    CACHE_ENABLED: bool = Field(
+        default=True,
+        description="Enable or disable caching",
+    )
+    CACHE_TTL_DEFAULT: int = Field(
+        default=300,
+        description="Default TTL (seconds) for cache entries",
+    )
+    CACHE_KEY_PREFIX: str = Field(
+        default="autoaudit",
+        description="Prefix for all cache keys",
+    )
 
     class Config:
         """Pydantic configuration."""
-
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
-
 
 settings = Settings()

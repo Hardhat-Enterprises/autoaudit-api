@@ -7,6 +7,10 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.api.v1 import auth
 from app.utils.logger import logger
+from app.api.v1 import cache
+from app.api.middleware.cache_middleware import CacheMiddleware
+from app.api.v1.graph import router as graph_router
+
 
 
 def create_app() -> FastAPI:
@@ -35,7 +39,7 @@ def configure_middleware(app: FastAPI, settings):
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    app.add_middleware(CacheMiddleware)
     # Trusted host middleware
     app.add_middleware(
         TrustedHostMiddleware,
@@ -105,6 +109,27 @@ def configure_endpoints(app: FastAPI):
             "status": "healthy",
             "version": settings.VERSION,
         }
+    
+def configure_routing(app: FastAPI, settings):
+    # Authentication endpoints
+    app.include_router(
+        auth.router,
+        prefix=f"{settings.API_PREFIX}/auth",
+        tags=["Authentication"],
+        responses={404: {"description": "Not found"}},
+    )
+  
+    # Cache endpoints
+    app.include_router(
+        cache.router,
+        prefix=f"{settings.API_PREFIX}/cache",
+        tags=["Cache"],
+    )
 
+    app.include_router(
+        graph_router,
+        prefix=f"{settings.API_PREFIX}",
+        tags=["Graph"],
+    )    
 
 app = create_app()
