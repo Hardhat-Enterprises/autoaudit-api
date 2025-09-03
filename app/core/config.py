@@ -1,8 +1,8 @@
 from typing import List, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
-
+import json
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
@@ -37,6 +37,31 @@ class Settings(BaseSettings):
         description="Base URL for Microsoft Graph API",
     )
 
+    
+    # --- Validators to be robust with .env inputs ---
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def _parse_bool(cls, v):
+        if isinstance(v, bool):
+            return v
+        return str(v).strip().lower() in {"1", "true", "yes", "on"}
+
+    @field_validator("ALLOWED_ORIGINS", "ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def _parse_list(cls, v):
+        if isinstance(v, list):
+            return v
+        s = str(v).strip()
+        if not s:
+            return []
+        # JSON array style: ["*"] or ["http://a","http://b"]
+        if s.startswith("["):
+            try:
+                return json.loads(s)
+            except Exception:
+                pass
+        # CSV style: http://a, http://b
+        return [item.strip() for item in s.split(",") if item.strip()]
     class Config:
         """Pydantic configuration."""
 
