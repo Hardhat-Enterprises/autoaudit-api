@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.api.v1 import auth
 from app.utils.logger import logger
+from app.api.v1 import graph
 
 
 def create_app() -> FastAPI:
@@ -53,6 +54,14 @@ def configure_routing(app: FastAPI, settings):
         prefix=f"{settings.API_PREFIX}/auth",
         tags=["Authentication"],
         responses={404: {"description": "Not found"}},
+    )
+
+     # Graph API endpoints
+    app.include_router(
+        graph.router,
+        prefix=f"{settings.API_PREFIX}/graph",
+        tags=["Graph API"],
+        responses={404: {"description": "Not found & Unsuccessfull"}}, #need to change this later
     )
 
 
@@ -106,5 +115,6 @@ def configure_endpoints(app: FastAPI):
             "version": settings.VERSION,
         }
 
-
+# At the very bottom of main.py
 app = create_app()
+
