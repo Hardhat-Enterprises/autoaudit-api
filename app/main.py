@@ -4,6 +4,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.v1 import auth, compliance
+
 from app.core.config import settings
 from app.api.v1 import auth
 from app.utils.logger import logger
@@ -47,11 +49,35 @@ def configure_middleware(app: FastAPI, settings):
 
 
 def configure_routing(app: FastAPI, settings):
+    # Import the v1 router
+    from app.api.v1 import router as v1_router
+    # Mount the v1 router with the API prefix
+    app.include_router(
+        v1_router,
+        prefix=settings.API_PREFIX
+    )
+
+###############################################################################
+    #debugging routes cos idk why they aint working
+    #useful if anyone forgets routes for different endpoints...check terminal
+    #delete this if unnecessary
+    for route in app.routes:
+        print(f"Route: {route.path}")
+###############################################################################
+
     # Authentication endpoints
     app.include_router(
         auth.router,
         prefix=f"{settings.API_PREFIX}/auth",
         tags=["Authentication"],
+        responses={404: {"description": "Not found"}},
+    )
+
+    # Compliance endpoints 
+    app.include_router(
+        compliance.router,
+        prefix=f"{settings.API_PREFIX}/compliance/security",
+        tags=["Security Compliance"],
         responses={404: {"description": "Not found"}},
     )
 
