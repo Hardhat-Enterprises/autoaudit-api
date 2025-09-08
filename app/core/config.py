@@ -37,6 +37,12 @@ class Settings(BaseSettings):
         description="Base URL for Microsoft Graph API",
     )
 
+    #Dev Proxy (Local Testing Proxy for now)
+    DEV_PROXY_URL: Optional[str] = Field(
+        default=None,
+        descritption="Dev Proxy URL for local testing (e.g., http://localhost:8000)"
+    )
+
     class Config:
         """Pydantic configuration."""
 
