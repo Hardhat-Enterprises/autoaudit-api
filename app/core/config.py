@@ -13,13 +13,16 @@ class Settings(BaseSettings):
     VERSION: str = Field(default="0.1.0", description="Application version")
 
     # Azure AD Configuration
-    AZURE_CLIENT_ID: str = Field(
-        description="Azure AD Client ID for application registration"
+    AZURE_CLIENT_ID: Optional[str] = Field(
+        default=None, description="Azure AD Client ID for application registration"
     )
-    AZURE_CLIENT_SECRET: str = Field(
-        description="Azure AD Client Secret for authentication"
+    AZURE_CLIENT_SECRET: Optional[str] = Field(
+        default=None, description="Azure AD Client Secret for authentication"
     )
-    AZURE_TENANT_ID: str = Field(description="Azure AD Tenant ID for authentication")
+    AZURE_TENANT_ID: Optional[str] = Field(
+        default=None, description="Azure AD Tenant ID for authentication"
+    )
+
 
     # Logging
     LOG_FORMAT: str = Field(default="json", description="Log format: json, text")
@@ -37,7 +40,17 @@ class Settings(BaseSettings):
         description="Base URL for Microsoft Graph API",
     )
 
-    
+    # Database (needed by health checks)
+    DATABASE_URL: Optional[str] = Field(
+        default=None,
+        description="Database connection string; if unset, DB health check is skipped",
+    )
+
+    # Health timeouts (seconds)
+    HEALTH_TIMEOUT_SECONDS: float = Field(
+        default=5.0, description="HTTP timeout used by health checks"
+    )
+
     # --- Validators to be robust with .env inputs ---
     @field_validator("DEBUG", mode="before")
     @classmethod
@@ -62,6 +75,34 @@ class Settings(BaseSettings):
                 pass
         # CSV style: http://a, http://b
         return [item.strip() for item in s.split(",") if item.strip()]
+    
+
+    @field_validator("API_PREFIX")
+    @classmethod
+    def _ensure_leading_slash(cls, v: str) -> str:
+        return v if v.startswith("/") else f"/{v}"
+
+    @field_validator("HEALTH_TIMEOUT_SECONDS", mode="before")
+    @classmethod
+    def _parse_timeout(cls, v):
+        # Accept "5", "5.0", etc.
+        try:
+            f = float(v)
+        except Exception:
+            raise ValueError("HEALTH_TIMEOUT_SECONDS must be a number")
+        if f <= 0:
+            raise ValueError("HEALTH_TIMEOUT_SECONDS must be > 0")
+        return f
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _db_url_if_set(cls, v: Optional[str]) -> Optional[str]:
+        # Allow None (so local dev can boot). If set, sanity check.
+        if v and "://" not in v:
+            raise ValueError("DATABASE_URL looks invalid (missing '://')")
+        return v
+
+    
     class Config:
         """Pydantic configuration."""
 
