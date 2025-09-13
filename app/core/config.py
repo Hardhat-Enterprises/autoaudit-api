@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     #Dev Proxy (Local Testing Proxy for now)
     DEV_PROXY_URL: Optional[str] = Field(
         default=None,
-        descritption="Dev Proxy URL for local testing (e.g., http://localhost:8000)"
+        description="Dev Proxy URL for local testing (e.g., http://localhost:8000)"
     )
 
     class Config:
