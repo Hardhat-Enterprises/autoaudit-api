@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     HEALTH_TIMEOUT_SECONDS: float = Field(
         default=5.0, description="HTTP timeout used by health checks"
     )
-
+    # Updated validators (DEBUG, ALLOWED_ORIGINS, API_PREFIX, HEALTH_TIMEOUT_SECONDS, DATABASE_URL)
     # --- Validators to be robust with .env inputs ---
     @field_validator("DEBUG", mode="before")
     @classmethod
