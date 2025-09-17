@@ -21,7 +21,7 @@ def create_app() -> FastAPI:
     configure_middleware(app, settings)
     configure_routing(app, settings)
     configure_exception_handlers(app)
-    configure_endpoints(app)
+    
 
     return app
 
@@ -94,24 +94,6 @@ def configure_exception_handlers(app: FastAPI):
             content={"error": "Internal server error", "status_code": 500},
         )
 
-
-def configure_endpoints(app: FastAPI):
-    @app.get("/")
-    async def root():
-        """Root endpoint."""
-        return {
-            "message": "AutoAudit API",
-            "version": settings.VERSION,
-            "docs": "/docs" if settings.DEBUG else None,
-        }
-
-    @app.get("/health")
-    async def health_check():
-        """Health check endpoint."""
-        return {
-            "status": "healthy",
-            "version": settings.VERSION,
-        }
 
 
 app = create_app()
