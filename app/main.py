@@ -5,9 +5,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1 import auth, compliance
-
 from app.core.config import settings
-from app.api.v1 import auth
 from app.utils.logger import logger
 
 

@@ -10,7 +10,10 @@ from app.models.compliance_model import (
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/compliance/security", tags=["Security Compliance"]) #router
+
+#Router
+router = APIRouter(prefix="/compliance/security", tags=["Security Compliance"]) 
+
 graph_service = GraphService()
 
 #MFA Settings Endpoint
