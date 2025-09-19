@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-
 from app.core.config import settings
+from app.api.v1 import health
 from app.api.v1 import auth
 from app.utils.logger import logger
 from app.api.v1 import graph
@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
     configure_middleware(app, settings)
     configure_routing(app, settings)
     configure_exception_handlers(app)
-    configure_endpoints(app)
+    
 
     return app
 
@@ -55,6 +55,14 @@ def configure_routing(app: FastAPI, settings):
         tags=["Authentication"],
         responses={404: {"description": "Not found"}},
     )
+    # Health endpoints
+    app.include_router(
+        health.router,
+        prefix=f"{settings.API_PREFIX}",
+        tags=["Health"],
+        responses={404: {"description": "Not found"}},
+        
+        )
 
      # Graph API endpoints
     app.include_router(
@@ -95,6 +103,7 @@ def configure_exception_handlers(app: FastAPI):
             status_code=500,
             content={"error": "Internal server error", "status_code": 500},
         )
+
 
 
 def configure_endpoints(app: FastAPI):
