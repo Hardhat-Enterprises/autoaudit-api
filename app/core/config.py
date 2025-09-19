@@ -103,6 +103,12 @@ class Settings(BaseSettings):
         return v
 
     
+    #Dev Proxy (Local Testing Proxy for now)
+    DEV_PROXY_URL: Optional[str] = Field(
+        default=None,
+        description="Dev Proxy URL for local testing (e.g., http://localhost:8000)"
+    )
+
     class Config:
         """Pydantic configuration."""
 
