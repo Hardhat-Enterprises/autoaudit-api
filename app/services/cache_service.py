@@ -1,4 +1,4 @@
-import aioredis
+import redis.asyncio as redis
 import asyncio
 from typing import Optional
 from app.core.config import settings
@@ -10,18 +10,33 @@ class CacheService:
     """Redis-based cache service for AutoAudit API."""
 
     def __init__(self):
-        # Initialize Redis connection pool
-        self.redis = aioredis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True,
-        )
+        self.redis = None
         # Stats
         self.hits = 0
         self.misses = 0
 
+    async def init(self):
+        # Initialize Redis connection pool
+        self.redis = await redis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+
+    async def close(self):
+        if self.redis:
+            await self.redis.close()
+
+    async def wait_closed(self):
+        if self.redis:
+            await self.redis.connection_pool.disconnect()
+
     async def get(self, key: str) -> Optional[str]:
         """Retrieve a value from cache."""
+        if not self.redis:
+            logger.warning("Redis not initialized")
+            self.misses += 1
+            return None
         # Use namespaced cache keys to avoid collisions across environments/projects
         value = await self.redis.get(f"{settings.CACHE_KEY_PREFIX}:{key}")
         if value is None:
@@ -34,6 +49,9 @@ class CacheService:
 
     async def set(self, key: str, value: str, ttl: Optional[int] = None) -> None:
         """Set a value in cache with TTL."""
+        if not self.redis:
+            logger.warning("Redis not initialized")
+            return
         expire = ttl or settings.CACHE_TTL_DEFAULT
         await self.redis.set(
             f"{settings.CACHE_KEY_PREFIX}:{key}",
@@ -44,11 +62,17 @@ class CacheService:
 
     async def delete(self, key: str) -> None:
         """Delete a key from cache."""
+        if not self.redis:
+            logger.warning("Redis not initialized")
+            return
         await self.redis.delete(f"{settings.CACHE_KEY_PREFIX}:{key}")
         logger.debug("Cache delete", key=key)
 
     async def clear(self) -> None:
         """Clear the entire cache (use with caution)."""
+        if not self.redis:
+            logger.warning("Redis not initialized")
+            return
         await self.redis.flushdb()
         logger.warning("Cache cleared")
 
@@ -62,5 +86,5 @@ class CacheService:
             "hit_rate": f"{hit_rate:.2f}%",
         }
 
-# Instantiate a singleton service
+# Singleton pattern with async init
 cache_service = CacheService()

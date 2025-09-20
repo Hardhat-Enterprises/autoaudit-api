@@ -3,7 +3,6 @@ from app.services.cache_service import cache_service
 from app.core.config import settings
 
 router = APIRouter()
-PREFIX = settings.API_PREFIX + "/cache"
 
 @router.get("/status")
 async def cache_status():
@@ -34,4 +33,5 @@ async def cache_stats():
     Retrieve cache hit/miss statistics.
     """
     stats = cache_service.stats()
+    return stats
     return stats

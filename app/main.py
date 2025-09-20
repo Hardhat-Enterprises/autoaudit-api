@@ -9,6 +9,7 @@ from app.api.v1 import auth, cache, health
 from app.api.v1.graph import router as graph_router  
 from app.api.middleware.cache_middleware import CacheMiddleware  
 from app.utils.logger import logger
+from app.services.cache_service import cache_service
 
 
 def create_app() -> FastAPI:
@@ -23,7 +24,16 @@ def create_app() -> FastAPI:
     configure_middleware(app, settings)
     configure_routing(app, settings)
     configure_exception_handlers(app)
-    
+
+    # Redis connection management
+    @app.on_event("startup")
+    async def startup_event():
+        await cache_service.init()
+
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        await cache_service.close()
+        await cache_service.wait_closed()
 
     return app
 
