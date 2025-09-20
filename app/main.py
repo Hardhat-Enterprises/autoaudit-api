@@ -3,11 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+
 from app.core.config import settings
-from app.api.v1 import health
-from app.api.v1 import auth
+from app.api.v1 import auth, cache, health
+from app.api.v1.graph import router as graph_router  
+from app.api.middleware.cache_middleware import CacheMiddleware  
 from app.utils.logger import logger
-from app.api.v1 import graph
+from app.services.cache_service import cache_service
 
 
 def create_app() -> FastAPI:
@@ -22,7 +24,16 @@ def create_app() -> FastAPI:
     configure_middleware(app, settings)
     configure_routing(app, settings)
     configure_exception_handlers(app)
-    
+
+    # Redis connection management
+    @app.on_event("startup")
+    async def startup_event():
+        await cache_service.init()
+
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        await cache_service.close()
+        await cache_service.wait_closed()
 
     return app
 
@@ -37,6 +48,9 @@ def configure_middleware(app: FastAPI, settings):
         allow_headers=["*"],
     )
 
+    # Caches GET responses; keep enabled for /graph/* and any other GETs
+    app.add_middleware(CacheMiddleware)
+
     # Trusted host middleware
     app.add_middleware(
         TrustedHostMiddleware,
@@ -48,7 +62,9 @@ def configure_middleware(app: FastAPI, settings):
 
 
 def configure_routing(app: FastAPI, settings):
+    # ----------------------------
     # Authentication endpoints
+    # ----------------------------
     app.include_router(
         auth.router,
         prefix=f"{settings.API_PREFIX}/auth",
@@ -64,12 +80,22 @@ def configure_routing(app: FastAPI, settings):
         
         )
 
-     # Graph API endpoints
+  
+    # Graph API endpoints
+    # Mounted under /api/v1/graph/*
     app.include_router(
-        graph.router,
+        graph_router,
         prefix=f"{settings.API_PREFIX}/graph",
         tags=["Graph API"],
-        responses={404: {"description": "Not found & Unsuccessfull"}}, #need to change this later
+    )
+
+ 
+    # Cache endpoints 
+    # /api/v1/cache/status, /api/v1/cache/clear, /api/v1/cache/stats
+    app.include_router(
+        cache.router,
+        prefix=f"{settings.API_PREFIX}/cache",
+        tags=["Cache"],
     )
 
 
@@ -119,11 +145,8 @@ def configure_endpoints(app: FastAPI):
     @app.get("/health")
     async def health_check():
         """Health check endpoint."""
-        return {
-            "status": "healthy",
-            "version": settings.VERSION,
-        }
+        return {"status": "healthy", "version": settings.VERSION}
 
-# At the very bottom of main.py
+
+# App entrypoint
 app = create_app()
-
