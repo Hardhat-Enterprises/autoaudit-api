@@ -67,4 +67,3 @@ async def call_graph_api(path: str):
     except ValueError:
         logger.warning("Response is not valid JSON")
         return {"raw_response": resp.text}
-

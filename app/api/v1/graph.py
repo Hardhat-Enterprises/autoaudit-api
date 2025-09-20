@@ -136,4 +136,3 @@ async def get_group_members(group_id: str):
     """Fetch members of a specific group."""
     data = await call_graph_api(f"groups/{group_id}/members")
     return [UserResponse(**user) for user in data.get("value", [])]
-
