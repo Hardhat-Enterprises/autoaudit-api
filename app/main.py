@@ -4,9 +4,11 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import auth, compliance
+from app.api.v1 import auth, compliance, health
+from app.core.config import settings
 from app.core.config import settings
 from app.utils.logger import logger
+from app.api.v1 import graph
 
 
 def create_app() -> FastAPI:
@@ -21,7 +23,7 @@ def create_app() -> FastAPI:
     configure_middleware(app, settings)
     configure_routing(app, settings)
     configure_exception_handlers(app)
-    configure_endpoints(app)
+    
 
     return app
 
@@ -70,6 +72,22 @@ def configure_routing(app: FastAPI, settings):
         tags=["Authentication"],
         responses={404: {"description": "Not found"}},
     )
+    # Health endpoints
+    app.include_router(
+        health.router,
+        prefix=f"{settings.API_PREFIX}",
+        tags=["Health"],
+        responses={404: {"description": "Not found"}},
+        
+        )
+
+     # Graph API endpoints
+    app.include_router(
+        graph.router,
+        prefix=f"{settings.API_PREFIX}/graph",
+        tags=["Graph API"],
+        responses={404: {"description": "Not found & Unsuccessfull"}}, #need to change this later
+    )
 
     # Compliance endpoints 
     app.include_router(
@@ -112,6 +130,7 @@ def configure_exception_handlers(app: FastAPI):
         )
 
 
+
 def configure_endpoints(app: FastAPI):
     @app.get("/")
     async def root():
@@ -130,5 +149,6 @@ def configure_endpoints(app: FastAPI):
             "version": settings.VERSION,
         }
 
-
+# At the very bottom of main.py
 app = create_app()
+
